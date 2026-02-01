@@ -139,7 +139,7 @@ public class DrugController {
             throw new IllegalArgumentException("Maximum page size for PDF export is " + MAX_PDF_PAGE_SIZE + ".");
         }
         Page<DrugResponse> resultPage = drugService.searchDrugs(
-                name, form, expired, null, expirationUntilYear, expirationUntilMonth, pageable
+                name, form, expired, null, null, expirationUntilYear, expirationUntilMonth, pageable
         );
         List<DrugResponse> drugs = resultPage.getContent();
         byte[] pdf = pdfExportService.generatePdf(drugs);
@@ -178,7 +178,7 @@ public class DrugController {
             throw new IllegalArgumentException("Maximum page size for CSV export is " + MAX_PDF_PAGE_SIZE + ".");
         }
         Page<DrugResponse> resultPage = drugService.searchDrugs(
-                name, form, expired, null, expirationUntilYear, expirationUntilMonth, pageable
+                name, form, expired, null, null, expirationUntilYear, expirationUntilMonth, pageable
         );
         List<DrugResponse> drugs = resultPage.getContent();
         byte[] csv = csvExportService.generateCsv(drugs);
@@ -211,6 +211,7 @@ public class DrugController {
     - form (e.g. pills, syrup)
     - expired (true/false)
     - expiringSoon (true) - returns drugs expiring within next 30 days
+    - alertSentThisMonth (true) - returns drugs with alerts sent in the current calendar month
     - expirationUntilYear & expirationUntilMonth (for expiration filtering)
 
     Supports sorting and pagination:
@@ -225,6 +226,7 @@ public class DrugController {
         @RequestParam(required = false) String form,
         @RequestParam(required = false) Boolean expired,
         @RequestParam(required = false) Boolean expiringSoon,
+        @RequestParam(required = false) Boolean alertSentThisMonth,
         @RequestParam(required = false) @Min(value = 2024, message = "Year must be >= 2024")
         @Max(value = 2100, message = "Year must be <= 2100") Integer expirationUntilYear,
         @RequestParam(required = false)
@@ -232,11 +234,11 @@ public class DrugController {
         @Max(value = 12, message = "Bro, months go only up to 12") Integer expirationUntilMonth,
         @ParameterObject Pageable pageable
     ) {
-        log.info("Searching drugs with filters: name={}, form={}, expired={}, expiringSoon={}, expirationUntil={}-{}",
-                name, form, expired, expiringSoon, expirationUntilYear, expirationUntilMonth);
+        log.info("Searching drugs with filters: name={}, form={}, expired={}, expiringSoon={}, alertSentThisMonth={}, expirationUntil={}-{}",
+                name, form, expired, expiringSoon, alertSentThisMonth, expirationUntilYear, expirationUntilMonth);
         if (pageable.getPageSize() > MAX_SEARCH_PAGE_SIZE) {
             throw new IllegalArgumentException("Maximum page size exceeded. Allowed maximum is " + MAX_SEARCH_PAGE_SIZE);
         }
-        return drugService.searchDrugs(name, form, expired, expiringSoon, expirationUntilYear, expirationUntilMonth, pageable);
+        return drugService.searchDrugs(name, form, expired, expiringSoon, alertSentThisMonth, expirationUntilYear, expirationUntilMonth, pageable);
     }
 }

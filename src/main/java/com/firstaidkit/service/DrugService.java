@@ -242,10 +242,10 @@ public class DrugService {
         return rawData.stream().filter(arr -> arr[0] != null && arr[1] != null).collect(Collectors.toMap(arr -> (String) arr[0], arr -> ((Number) arr[1]).longValue()));
     }
 
-    @Cacheable(value = "drugsSearch", keyGenerator = "userAwareCacheKeyGenerator", condition = "(#name != null && #name.trim().length() > 0) || (#form != null && #form.trim().length() > 0) || (#expired != null) || (#expiringSoon != null) || (#expirationUntilYear != null) || (#expirationUntilMonth != null)", unless = "#result == null || #result.isEmpty()")
-    public Page<DrugResponse> searchDrugs(String name, String form, Boolean expired, Boolean expiringSoon, Integer expirationUntilYear, Integer expirationUntilMonth, Pageable pageable) {
+    @Cacheable(value = "drugsSearch", keyGenerator = "userAwareCacheKeyGenerator", condition = "(#name != null && #name.trim().length() > 0) || (#form != null && #form.trim().length() > 0) || (#expired != null) || (#expiringSoon != null) || (#alertSentThisMonth != null) || (#expirationUntilYear != null) || (#expirationUntilMonth != null)", unless = "#result == null || #result.isEmpty()")
+    public Page<DrugResponse> searchDrugs(String name, String form, Boolean expired, Boolean expiringSoon, Boolean alertSentThisMonth, Integer expirationUntilYear, Integer expirationUntilMonth, Pageable pageable) {
         Integer userId = currentUserService.getCurrentUserId();
-        log.info("User {} searching drugs with filters: name={}, form={}, expired={}, expiringSoon={}, expirationUntilYear={}, expirationUntilMonth={}, pageable={}", userId, name, form, expired, expiringSoon, expirationUntilYear, expirationUntilMonth, pageable);
+        log.info("User {} searching drugs with filters: name={}, form={}, expired={}, expiringSoon={}, alertSentThisMonth={}, expirationUntilYear={}, expirationUntilMonth={}, pageable={}", userId, name, form, expired, expiringSoon, alertSentThisMonth, expirationUntilYear, expirationUntilMonth, pageable);
 
         name = (name != null && !name.isBlank()) ? name.trim() : "";
 
@@ -293,6 +293,14 @@ public class DrugService {
         }
         if (expirationUntil != null) {
             spec = spec.and((root, query, cb) -> cb.lessThanOrEqualTo(root.get("expirationDate"), expirationUntil));
+        }
+        if (Boolean.TRUE.equals(alertSentThisMonth)) {
+            ZoneId zone = ZoneId.of("Europe/Warsaw");
+            YearMonth currentMonth = YearMonth.now(zone);
+            OffsetDateTime monthStart = currentMonth.atDay(1).atStartOfDay(zone).toOffsetDateTime();
+            OffsetDateTime monthEnd = currentMonth.atEndOfMonth().atStartOfDay(zone).plusDays(1).toOffsetDateTime();
+            spec = spec.and((root, query, cb) -> cb.greaterThanOrEqualTo(root.get("alertSentAt"), monthStart));
+            spec = spec.and((root, query, cb) -> cb.lessThan(root.get("alertSentAt"), monthEnd));
         }
         Page<DrugEntity> entityResult = drugRepository.findAll(spec, pageable);
         return entityResult.map(drugMapper::mapToDTO);
