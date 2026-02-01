@@ -207,11 +207,8 @@ public class DrugService {
         log.info("Consolidated alert sent for {} drugs to {}", drugsToAlert.size(), recipientEmail);
 
         OffsetDateTime now = OffsetDateTime.now();
-        for (DrugEntity drug : drugsToAlert) {
-            drug.setAlertSent(true);
-            drug.setAlertSentAt(now);
-            drugRepository.save(drug);
-        }
+        List<Integer> drugIds = drugsToAlert.stream().map(DrugEntity::getDrugId).toList();
+        drugRepository.markAlertsAsSent(drugIds, now);
         return drugsToAlert.size();
     }
 
