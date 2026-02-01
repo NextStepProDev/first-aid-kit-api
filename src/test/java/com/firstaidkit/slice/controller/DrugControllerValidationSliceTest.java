@@ -79,7 +79,7 @@ public class DrugControllerValidationSliceTest {
                 // Current year, future month: valid
                 Arguments.of(true, currentYear, 12),
                 // Current year, past month: invalid
-                Arguments.of(currentMonth > 1, currentYear, currentMonth - 1),
+                Arguments.of(false, currentYear, currentMonth - 1),
                 // Past year: invalid
                 Arguments.of(false, currentYear - 1, 12)
         );
@@ -147,6 +147,7 @@ public class DrugControllerValidationSliceTest {
     @DisplayName("Should validate expiration date cross-field (year + month)")
     void shouldValidateExpirationDateCrossField(Boolean isValid, Integer year, Integer month) throws Exception {
         String json = buildJson("Ibuprofen", "PILLS", year, month, "lek przeciwbolowy");
+        System.out.println("Test params: year=" + year + ", month=" + month);
         mockMvc.perform(
                         post("/api/drugs")
                                 .contentType(MediaType.APPLICATION_JSON)

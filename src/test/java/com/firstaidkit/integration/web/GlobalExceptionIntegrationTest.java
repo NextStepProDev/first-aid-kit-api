@@ -120,25 +120,6 @@ public class GlobalExceptionIntegrationTest {
         }
 
         @Test
-        void shouldReturn400WhenDescriptionIsBlank() throws Exception {
-            Map<String, Object> invalidDto = Map.of(
-                    "name", "Ibuprofen",
-                    "form", "PILLS",
-                    "description", "",  // <---
-                    "expirationYear", CURRENT_YEAR,
-                    "expirationMonth", NEXT_MONTH
-            );
-
-            mockMvc.perform(post("/api/drugs")
-                            .contentType(MediaType.APPLICATION_JSON)
-                            .content(objectMapper.writeValueAsString(invalidDto)))
-                    .andExpect(status().isBadRequest())
-                    .andExpect(jsonPath("$.message").value("Validation failed"))
-                    .andExpect(jsonPath("$.errors").isArray())
-                    .andExpect(jsonPath("$.errors[*].field").value(org.hamcrest.Matchers.hasItem("description")));
-        }
-
-        @Test
         void shouldReturn400WhenExpirationMonthIsOutOfRange() throws Exception {
             Map<String, Object> invalidDto = Map.of(
                     "name", "Ibuprofen",

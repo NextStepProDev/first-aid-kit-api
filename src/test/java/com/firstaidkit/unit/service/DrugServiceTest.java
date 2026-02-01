@@ -452,8 +452,8 @@ class DrugServiceTest {
 
             verify(emailService).sendEmail(eq("u10@x.com"), anyString(), anyString());
             verify(emailService).sendEmail(eq("u20@x.com"), anyString(), anyString());
-            verify(drugRepository).save(argThat(d -> d.getDrugId() == 1 && d.isAlertSent()));
-            verify(drugRepository).save(argThat(d -> d.getDrugId() == 2 && d.isAlertSent()));
+            verify(drugRepository, times(2))
+                    .markAlertsAsSent(anyList(), any());
         }
 
         @Test
