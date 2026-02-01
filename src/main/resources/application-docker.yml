@@ -15,13 +15,13 @@ server:
   port: 8081
 
 # Disable Swagger/OpenAPI in production
-  springdoc:
-    api-docs:
-      enabled: false
-    swagger-ui:
-      enabled: false
+springdoc:
+  api-docs:
+    enabled: false
+  swagger-ui:
+    enabled: false
 
-    # Disable rate limiting requests count increase for production
+# Disable rate limiting requests count increase for production
 app:
   rate-limit:
     requests-per-minute: 10

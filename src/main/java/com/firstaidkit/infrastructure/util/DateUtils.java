@@ -11,7 +11,8 @@ public class DateUtils {
     public static OffsetDateTime buildExpirationDate(int year, int month) {
         return YearMonth.of(year, month)
                 .atEndOfMonth()
-                .atStartOfDay(EUROPE_WARSAW)
+                .atTime(12, 0)
+                .atZone(EUROPE_WARSAW)
                 .toOffsetDateTime();
     }
 

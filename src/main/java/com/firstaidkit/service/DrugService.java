@@ -5,7 +5,6 @@ import com.firstaidkit.controller.dto.drug.DrugFormDTO;
 import com.firstaidkit.controller.dto.drug.DrugResponse;
 import com.firstaidkit.controller.dto.drug.DrugStatistics;
 import com.firstaidkit.domain.exception.DrugNotFoundException;
-import com.firstaidkit.domain.exception.EmailSendingException;
 import com.firstaidkit.domain.exception.InvalidPasswordException;
 import com.firstaidkit.infrastructure.database.entity.DrugEntity;
 import com.firstaidkit.infrastructure.database.entity.DrugFormEntity;
@@ -149,8 +148,11 @@ public class DrugService {
 
         log.info("Found {} users with expiring drugs", userIds.size());
 
+        Map<Integer, UserEntity> usersById = userRepository.findAllById(userIds).stream()
+                .collect(Collectors.toMap(UserEntity::getUserId, u -> u));
+
         for (Integer userId : userIds) {
-            UserEntity user = userRepository.findByUserId(userId).orElse(null);
+            UserEntity user = usersById.get(userId);
             if (user == null || !Boolean.TRUE.equals(user.getAlertsEnabled()) || user.getEmail() == null || user.getEmail().isBlank()) {
                 log.warn("Skipping user {} - alerts disabled or no valid email address", userId);
                 continue;
@@ -201,21 +203,16 @@ public class DrugService {
         messageBuilder.append("\uD83D\uDC9A Take care of your health!\n");
         messageBuilder.append("Your First Aid Kit \uD83C\uDFE5");
 
-        try {
-            emailService.sendEmail(recipientEmail, subject, messageBuilder.toString());
-            log.info("Consolidated alert sent for {} drugs to {}", drugsToAlert.size(), recipientEmail);
+        emailService.sendEmail(recipientEmail, subject, messageBuilder.toString());
+        log.info("Consolidated alert sent for {} drugs to {}", drugsToAlert.size(), recipientEmail);
 
-            OffsetDateTime now = OffsetDateTime.now();
-            for (DrugEntity drug : drugsToAlert) {
-                drug.setAlertSent(true);
-                drug.setAlertSentAt(now);
-                drugRepository.save(drug);
-            }
-            return drugsToAlert.size();
-        } catch (Exception e) {
-            log.error("Failed to send consolidated alert email to {}", recipientEmail, e);
-            throw new EmailSendingException("Could not send consolidated email alert", e);
+        OffsetDateTime now = OffsetDateTime.now();
+        for (DrugEntity drug : drugsToAlert) {
+            drug.setAlertSent(true);
+            drug.setAlertSentAt(now);
+            drugRepository.save(drug);
         }
+        return drugsToAlert.size();
     }
 
     @Cacheable(value = "drugStatistics", keyGenerator = "userAwareCacheKeyGenerator")

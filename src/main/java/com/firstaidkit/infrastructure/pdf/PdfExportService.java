@@ -33,7 +33,7 @@ public class PdfExportService {
         for (DrugResponse drug : drugs) {
             table.addCell(String.valueOf(index++));
             table.addCell(drug.getDrugName());
-            table.addCell(drug.getDrugForm().name());
+            table.addCell(drug.getDrugForm() != null ? drug.getDrugForm().name() : "-");
             table.addCell(drug.getExpirationDate().toLocalDate().toString());
         }
         return table;

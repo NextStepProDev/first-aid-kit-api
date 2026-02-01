@@ -26,8 +26,6 @@ public interface DrugRepository extends JpaRepository<DrugEntity, Integer>, JpaS
 
     long countByOwnerUserIdAndExpirationDateBefore(Integer userId, OffsetDateTime date);
 
-    long countByOwnerUserIdAndAlertSentTrue(Integer userId);
-
     long countByOwnerUserIdAndAlertSentAtGreaterThanEqualAndAlertSentAtLessThan(Integer userId, OffsetDateTime from, OffsetDateTime to);
 
     @Query("SELECT d.drugForm.name, COUNT(d) FROM DrugEntity d WHERE d.owner.userId = :userId GROUP BY d.drugForm.name")

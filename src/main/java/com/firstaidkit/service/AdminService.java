@@ -96,14 +96,13 @@ public class AdminService {
         log.info("Admin {} deleted user account: {}", adminEmail, deletedUserEmail);
     }
 
-    @Transactional(readOnly = true)
     public int broadcastEmail(BroadcastEmailRequest request) {
         String adminEmail = currentUserService.getCurrentUserEmail();
         List<UserEntity> users = userRepository.findAll();
 
         int sentCount = 0;
         for (UserEntity user : users) {
-            if (user.getActive()) {
+            if (Boolean.TRUE.equals(user.getActive())) {
                 emailService.sendEmailAsync(user.getEmail(), request.subject(), request.message());
                 sentCount++;
             }
@@ -125,7 +124,7 @@ public class AdminService {
             csv.append(escapeCsv(user.getEmail())).append(";");
             csv.append(escapeCsv(user.getName() != null ? user.getName() : "")).append(";");
             csv.append(escapeCsv(user.getUserName())).append(";");
-            csv.append(user.getActive()).append(";");
+            csv.append(Boolean.TRUE.equals(user.getActive())).append(";");
             csv.append(user.getCreatedAt() != null ? user.getCreatedAt().toString() : "").append("\n");
         }
 
@@ -133,6 +132,7 @@ public class AdminService {
         return csv.toString();
     }
 
+    @Transactional(readOnly = true)
     public void sendEmailToUser(Integer userId, BroadcastEmailRequest request) {
         UserEntity user = userRepository.findById(userId)
                 .orElseThrow(() -> new ResourceNotFoundException("User not found with id: " + userId));

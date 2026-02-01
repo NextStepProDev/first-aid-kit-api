@@ -74,7 +74,6 @@ class DrugServiceTest {
         // Set up default user context for all tests
         lenient().when(currentUserService.getCurrentUserId()).thenReturn(TEST_USER_ID);
         lenient().when(currentUserService.getCurrentUserEmail()).thenReturn(TEST_USER_EMAIL);
-        lenient().when(userRepository.findByUserId(TEST_USER_ID)).thenReturn(Optional.of(UserEntity.builder().userId(TEST_USER_ID).email(TEST_USER_EMAIL).build()));
     }
 
     // ---------------------- getDrugById ----------------------
@@ -440,8 +439,7 @@ class DrugServiceTest {
 
             UserEntity user10 = UserEntity.builder().userId(10).email("u10@x.com").build();
             UserEntity user20 = UserEntity.builder().userId(20).email("u20@x.com").build();
-            when(userRepository.findByUserId(10)).thenReturn(Optional.of(user10));
-            when(userRepository.findByUserId(20)).thenReturn(Optional.of(user20));
+            when(userRepository.findAllById(List.of(10, 20))).thenReturn(List.of(user10, user20));
 
             DrugEntity drug10 = DrugEntity.builder().drugId(1).drugName("D10").expirationDate(end).alertSent(false).build();
             DrugEntity drug20 = DrugEntity.builder().drugId(2).drugName("D20").expirationDate(end).alertSent(false).build();
@@ -464,7 +462,7 @@ class DrugServiceTest {
             when(drugRepository.findDistinctOwnerIdsWithExpiringDrugs(end)).thenReturn(List.of(10));
 
             UserEntity userNoEmail = UserEntity.builder().userId(10).email(null).build();
-            when(userRepository.findByUserId(10)).thenReturn(Optional.of(userNoEmail));
+            when(userRepository.findAllById(List.of(10))).thenReturn(List.of(userNoEmail));
 
             drugService.sendExpiryAlertEmailsForAllUsers(YEAR_NOW_PLUS_1, 6);
 
@@ -475,7 +473,7 @@ class DrugServiceTest {
         void shouldSkipUsersNotFound() {
             OffsetDateTime end = DateUtils.buildExpirationDate(YEAR_NOW_PLUS_1, 6);
             when(drugRepository.findDistinctOwnerIdsWithExpiringDrugs(end)).thenReturn(List.of(99));
-            when(userRepository.findByUserId(99)).thenReturn(Optional.empty());
+            when(userRepository.findAllById(List.of(99))).thenReturn(List.of());
 
             drugService.sendExpiryAlertEmailsForAllUsers(YEAR_NOW_PLUS_1, 6);
 

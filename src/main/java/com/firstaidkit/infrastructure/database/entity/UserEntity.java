@@ -39,7 +39,8 @@ public class UserEntity {
     private String name;
 
     @Column(name = "active")
-    private Boolean active;
+    @Builder.Default
+    private Boolean active = false;
 
     @ManyToMany(cascade = CascadeType.MERGE, fetch = FetchType.EAGER)
     @JoinTable(

@@ -79,7 +79,7 @@ public class EmailVerificationService {
             return;
         }
 
-        if (user.getActive()) {
+        if (Boolean.TRUE.equals(user.getActive())) {
             log.warn("Resend verification requested for already active user: {}", email);
             return;
         }
@@ -113,17 +113,13 @@ public class EmailVerificationService {
     }
 
     private void sendVerificationEmail(UserEntity user, String verificationUrl) {
-        try {
-            String subject = "\u2709\uFE0F Potwierdz swoj adres email - First Aid Kit";
-            String body = buildVerificationEmailBody(
-                    user.getName() != null ? user.getName() : user.getUserName(),
-                    verificationUrl
-            );
-            emailService.sendEmail(user.getEmail(), subject, body);
-            log.info("Verification email sent to: {}", user.getEmail());
-        } catch (Exception e) {
-            log.error("Failed to send verification email to {}: {}", user.getEmail(), e.getMessage());
-        }
+        String subject = "\u2709\uFE0F Potwierdz swoj adres email - First Aid Kit";
+        String body = buildVerificationEmailBody(
+                user.getName() != null ? user.getName() : user.getUserName(),
+                verificationUrl
+        );
+        emailService.sendEmail(user.getEmail(), subject, body);
+        log.info("Verification email sent to: {}", user.getEmail());
     }
 
     private String buildVerificationEmailBody(String name, String verificationUrl) {
