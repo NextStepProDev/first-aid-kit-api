@@ -40,7 +40,7 @@ spring:
     hikari:
       idle-timeout: 10000
       connection-timeout: 20000
-      minimum-idle: 4
+      minimum-idle: 3
       maximum-pool-size: 10
   flyway:
     enabled: true
