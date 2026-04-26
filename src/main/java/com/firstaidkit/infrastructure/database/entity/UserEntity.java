@@ -67,6 +67,10 @@ public class UserEntity {
     @Builder.Default
     private Boolean alertsEnabled = true;
 
+    @Column(name = "language")
+    @Builder.Default
+    private String language = "pl";
+
     public boolean isAccountLocked() {
         return lockedUntil != null && lockedUntil.isAfter(OffsetDateTime.now());
     }

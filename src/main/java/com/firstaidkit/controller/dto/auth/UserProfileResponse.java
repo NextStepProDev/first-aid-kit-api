@@ -22,4 +22,5 @@ public class UserProfileResponse {
     private OffsetDateTime createdAt;
     private OffsetDateTime lastLogin;
     private Boolean alertsEnabled;
+    private String language;
 }

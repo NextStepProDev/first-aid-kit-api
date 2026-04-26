@@ -153,6 +153,7 @@ public class AuthService {
                 .name(request.getName())
                 .active(false)
                 .role(roles)
+                .language(request.getLanguage() != null ? request.getLanguage() : "pl")
                 .createdAt(OffsetDateTime.now())
                 .build();
 
@@ -237,6 +238,7 @@ public class AuthService {
                 .createdAt(user.getCreatedAt())
                 .lastLogin(user.getLastLogin())
                 .alertsEnabled(user.getAlertsEnabled())
+                .language(user.getLanguage())
                 .build();
     }
 
@@ -272,6 +274,7 @@ public class AuthService {
                 .createdAt(savedUser.getCreatedAt())
                 .lastLogin(savedUser.getLastLogin())
                 .alertsEnabled(savedUser.getAlertsEnabled())
+                .language(savedUser.getLanguage())
                 .build();
     }
 
@@ -299,6 +302,35 @@ public class AuthService {
                 .createdAt(savedUser.getCreatedAt())
                 .lastLogin(savedUser.getLastLogin())
                 .alertsEnabled(savedUser.getAlertsEnabled())
+                .language(savedUser.getLanguage())
+                .build();
+    }
+
+    @Transactional
+    public UserProfileResponse updateLanguage(String language) {
+        Integer userId = currentUserService.getCurrentUserId();
+
+        UserEntity user = userRepository.findById(userId)
+                .orElseThrow(() -> new IllegalStateException("User not found"));
+
+        user.setLanguage(language);
+        UserEntity savedUser = userRepository.save(user);
+        log.info("Language set to {} for user: {}", language, savedUser.getEmail());
+
+        Set<String> roles = savedUser.getRole().stream()
+                .map(RoleEntity::getRole)
+                .collect(Collectors.toSet());
+
+        return UserProfileResponse.builder()
+                .userId(savedUser.getUserId())
+                .username(savedUser.getUserName())
+                .email(savedUser.getEmail())
+                .name(savedUser.getName())
+                .roles(roles)
+                .createdAt(savedUser.getCreatedAt())
+                .lastLogin(savedUser.getLastLogin())
+                .alertsEnabled(savedUser.getAlertsEnabled())
+                .language(savedUser.getLanguage())
                 .build();
     }
 }

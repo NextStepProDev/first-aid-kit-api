@@ -3,6 +3,7 @@ package com.firstaidkit.controller.dto.auth;
 import com.firstaidkit.infrastructure.validation.ValidPassword;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -31,4 +32,7 @@ public class RegisterRequest {
     @NotBlank(message = "Name is required")
     @Size(min = 2, max = 100, message = "Name must be between 2 and 100 characters")
     private String name;
+
+    @Pattern(regexp = "^(pl|en)$", message = "Language must be 'pl' or 'en'")
+    private String language;
 }

@@ -166,6 +166,20 @@ public class AuthController {
         return ResponseEntity.ok(profile);
     }
 
+    @PutMapping("/language")
+    @Operation(summary = "Update language preference", description = "Updates the language preference for the authenticated user")
+    @SecurityRequirement(name = "bearerAuth")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Language preference updated successfully",
+                    content = @Content(schema = @Schema(implementation = UserProfileResponse.class))),
+            @ApiResponse(responseCode = "400", description = "Invalid language"),
+            @ApiResponse(responseCode = "401", description = "Not authenticated")
+    })
+    public ResponseEntity<UserProfileResponse> updateLanguage(@Valid @RequestBody UpdateLanguageRequest request) {
+        UserProfileResponse profile = authService.updateLanguage(request.language());
+        return ResponseEntity.ok(profile);
+    }
+
     @PutMapping("/profile")
     @Operation(summary = "Update user profile", description = "Updates the name and username for the authenticated user. Email cannot be changed.")
     @SecurityRequirement(name = "bearerAuth")
