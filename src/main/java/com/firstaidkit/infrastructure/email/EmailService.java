@@ -48,7 +48,7 @@ public class EmailService {
         log.info("Email successfully sent to: {}", to);
     }
 
-    private void sendEmailFallback(String to, String subject, String body, Exception e) {
+    void sendEmailFallback(String to, String subject, String body, Exception e) {
         log.error("Failed to send email to {} after all retries. Subject: {}. Error: {}", to, subject, e.getMessage());
         throw new EmailSendingException("Failed to send email to " + to + " after all retries", e);
     }
