@@ -8,13 +8,13 @@ import com.firstaidkit.infrastructure.database.entity.UserEntity;
 import com.firstaidkit.infrastructure.database.repository.DrugRepository;
 import com.firstaidkit.infrastructure.database.repository.RoleRepository;
 import com.firstaidkit.infrastructure.database.repository.UserRepository;
-import com.firstaidkit.infrastructure.email.EmailService;
 import com.firstaidkit.infrastructure.security.CurrentUserService;
 import com.firstaidkit.infrastructure.security.CustomUserDetailService;
 import com.firstaidkit.infrastructure.security.CustomUserDetails;
 import com.firstaidkit.infrastructure.security.JwtTokenProvider;
 import com.firstaidkit.service.AuthService;
 import com.firstaidkit.service.EmailVerificationService;
+import com.firstaidkit.service.LoginAttemptService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -69,9 +69,9 @@ class AuthServiceTest {
     @Mock
     private CurrentUserService currentUserService;
     @Mock
-    private EmailService emailService;
-    @Mock
     private EmailVerificationService emailVerificationService;
+    @Mock
+    private LoginAttemptService loginAttemptService;
 
     @InjectMocks
     private AuthService authService;
@@ -144,40 +144,40 @@ class AuthServiceTest {
         }
 
         @Test
-        void shouldHandleFailedLoginAndIncrementAttempts() {
+        void shouldHandleFailedLoginAndThrowBadCredentials() {
             UserEntity user = buildUserEntity();
             user.setFailedLoginAttempts(0);
 
             when(userRepository.findByEmail(TEST_EMAIL)).thenReturn(user);
             when(authenticationManager.authenticate(any())).thenThrow(new BadCredentialsException("bad"));
+            when(loginAttemptService.handleFailedLogin(TEST_EMAIL))
+                    .thenReturn(new LoginAttemptService.LoginAttemptResult(false, 0));
 
             LoginRequest request = LoginRequest.builder().email(TEST_EMAIL).password("wrong").build();
 
             assertThatThrownBy(() -> authService.login(request))
                     .isInstanceOf(BadCredentialsException.class);
 
-            ArgumentCaptor<UserEntity> captor = ArgumentCaptor.forClass(UserEntity.class);
-            verify(userRepository).save(captor.capture());
-            assertThat(captor.getValue().getFailedLoginAttempts()).isEqualTo(1);
+            verify(loginAttemptService).handleFailedLogin(TEST_EMAIL);
         }
 
         @Test
-        void shouldLockAccountAfterMaxFailedAttempts() {
+        void shouldThrowAccountLockedAfterMaxFailedAttempts() {
             UserEntity user = buildUserEntity();
-            user.setFailedLoginAttempts(4); // next attempt = 5th = MAX
+            user.setFailedLoginAttempts(4);
 
             when(userRepository.findByEmail(TEST_EMAIL)).thenReturn(user);
             when(authenticationManager.authenticate(any())).thenThrow(new BadCredentialsException("bad"));
+            when(loginAttemptService.handleFailedLogin(TEST_EMAIL))
+                    .thenReturn(new LoginAttemptService.LoginAttemptResult(true, 15));
 
             LoginRequest request = LoginRequest.builder().email(TEST_EMAIL).password("wrong").build();
 
             assertThatThrownBy(() -> authService.login(request))
-                    .isInstanceOf(BadCredentialsException.class);
+                    .isInstanceOf(AccountLockedException.class)
+                    .hasMessageContaining("Account is locked");
 
-            ArgumentCaptor<UserEntity> captor = ArgumentCaptor.forClass(UserEntity.class);
-            verify(userRepository).save(captor.capture());
-            assertThat(captor.getValue().getLockedUntil()).isNotNull();
-            assertThat(captor.getValue().getFailedLoginAttempts()).isEqualTo(5);
+            verify(loginAttemptService).handleFailedLogin(TEST_EMAIL);
         }
 
         @Test
@@ -197,8 +197,7 @@ class AuthServiceTest {
 
             authService.login(LoginRequest.builder().email(TEST_EMAIL).password(TEST_PASSWORD).build());
 
-            // resetFailedAttempts + updateLastLogin = at least 2 saves
-            verify(userRepository, atLeast(1)).save(any(UserEntity.class));
+            verify(loginAttemptService).resetFailedAttempts(TEST_USER_ID);
         }
     }
 
@@ -226,7 +225,7 @@ class AuthServiceTest {
 
             MessageResponse response = authService.register(request);
 
-            assertThat(response.getMessage()).contains("Rejestracja przebiegla pomyslnie");
+            assertThat(response.getMessage()).contains("Registration successful");
             verify(userRepository, atLeast(1)).save(any(UserEntity.class));
             verify(emailVerificationService).createVerificationToken(any(UserEntity.class));
 

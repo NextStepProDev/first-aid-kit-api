@@ -36,9 +36,6 @@ import java.util.stream.Collectors;
 @Slf4j
 public class AuthService {
 
-    private static final int MAX_FAILED_ATTEMPTS = 5;
-    private static final int LOCKOUT_DURATION_MINUTES = 15;
-
     private final AuthenticationManager authenticationManager;
     private final JwtTokenProvider jwtTokenProvider;
     private final UserRepository userRepository;
@@ -48,17 +45,19 @@ public class AuthService {
     private final CustomUserDetailService userDetailService;
     private final CurrentUserService currentUserService;
     private final EmailVerificationService emailVerificationService;
+    private final LoginAttemptService loginAttemptService;
 
     @Value("${app.admin.email}")
     private String adminEmail;
 
     @Transactional
     public JwtResponse login(LoginRequest request) {
-        // Check if account is locked before attempting authentication
         UserEntity existingUser = userRepository.findByEmail(request.getEmail());
         if (existingUser != null && existingUser.isAccountLocked()) {
+            long minutesLeft = java.time.Duration.between(
+                    OffsetDateTime.now(), existingUser.getLockedUntil()).toMinutes() + 1;
             log.warn("Login attempt on locked account: {}", request.getEmail());
-            throw new AccountLockedException("Account is locked. Please try again later.");
+            throw new AccountLockedException("Account is locked", minutesLeft);
         }
 
         try {
@@ -70,8 +69,7 @@ public class AuthService {
             String accessToken = jwtTokenProvider.generateAccessToken(authentication);
             String refreshToken = jwtTokenProvider.generateRefreshToken(authentication);
 
-            // Reset failed attempts on successful login
-            resetFailedAttempts(userDetails.getUserId());
+            loginAttemptService.resetFailedAttempts(userDetails.getUserId());
             updateLastLogin(userDetails.getUserId());
 
             log.info("User logged in successfully: {}", request.getEmail());
@@ -84,35 +82,14 @@ public class AuthService {
                     userDetails.getEmail()
             );
         } catch (DisabledException e) {
-            throw new DisabledException("Konto nieaktywne. Sprawdz email i potwierdz rejestracje.");
+            throw new DisabledException("Account inactive");
         } catch (BadCredentialsException e) {
-            handleFailedLogin(request.getEmail());
+            LoginAttemptService.LoginAttemptResult result = loginAttemptService.handleFailedLogin(request.getEmail());
+            if (result.locked()) {
+                throw new AccountLockedException("Account is locked", result.lockoutMinutes());
+            }
             throw new BadCredentialsException("Invalid email or password");
         }
-    }
-
-    private void handleFailedLogin(String email) {
-        UserEntity user = userRepository.findByEmail(email);
-        if (user != null) {
-            user.incrementFailedAttempts();
-
-            if (user.getFailedLoginAttempts() >= MAX_FAILED_ATTEMPTS) {
-                user.setLockedUntil(OffsetDateTime.now().plusMinutes(LOCKOUT_DURATION_MINUTES));
-                log.warn("Account locked due to {} failed attempts: {}", MAX_FAILED_ATTEMPTS, email);
-            }
-
-            userRepository.save(user);
-            log.warn("Failed login attempt {} for user: {}", user.getFailedLoginAttempts(), email);
-        }
-    }
-
-    private void resetFailedAttempts(Integer userId) {
-        userRepository.findById(userId).ifPresent(user -> {
-            if (user.getFailedLoginAttempts() > 0 || user.getLockedUntil() != null) {
-                user.resetFailedAttempts();
-                userRepository.save(user);
-            }
-        });
     }
 
     private void updateLastLogin(Integer userId) {
@@ -162,7 +139,7 @@ public class AuthService {
 
         emailVerificationService.createVerificationToken(savedUser);
 
-        return MessageResponse.of("Rejestracja przebiegla pomyslnie. Sprawdz email, aby aktywowac konto.");
+        return MessageResponse.of("Registration successful. Check your email to activate your account.");
     }
 
     public JwtResponse refreshToken(RefreshTokenRequest request) {

@@ -192,10 +192,14 @@ public class GlobalExceptionHandler {
     }
 
     @ExceptionHandler(AccountLockedException.class)
-    public ResponseEntity<ErrorMessage> handleAccountLocked(AccountLockedException ex) {
+    public ResponseEntity<java.util.Map<String, Object>> handleAccountLocked(AccountLockedException ex) {
         log.warn("Account locked: {}", ex.getMessage());
-        return ResponseEntity.status(HttpStatus.LOCKED)
-                .body(new ErrorMessage(423, ex.getMessage()));
+        java.util.Map<String, Object> body = new java.util.LinkedHashMap<>();
+        body.put("status", 423);
+        body.put("message", ex.getMessage());
+        body.put("minutesLeft", ex.getMinutesLeft());
+        body.put("timestamp", OffsetDateTime.now().toString());
+        return ResponseEntity.status(HttpStatus.LOCKED).body(body);
     }
 
     @ExceptionHandler(InvalidPasswordException.class)

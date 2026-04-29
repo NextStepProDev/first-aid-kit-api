@@ -51,7 +51,7 @@ public class AuthController {
     })
     public ResponseEntity<MessageResponse> verifyEmail(@RequestParam String token) {
         emailVerificationService.verifyEmail(token);
-        return ResponseEntity.ok(MessageResponse.of("Konto zostalo aktywowane. Mozesz sie teraz zalogowac."));
+        return ResponseEntity.ok(MessageResponse.of("Account activated. You can now log in."));
     }
 
     @PostMapping("/resend-verification")
@@ -63,7 +63,7 @@ public class AuthController {
     })
     public ResponseEntity<MessageResponse> resendVerification(@Valid @RequestBody ForgotPasswordRequest request) {
         emailVerificationService.resendVerification(request.getEmail());
-        return ResponseEntity.ok(MessageResponse.of("Jesli konto wymaga weryfikacji, nowy link zostal wyslany."));
+        return ResponseEntity.ok(MessageResponse.of("If the account requires verification, a new link has been sent."));
     }
 
     @PostMapping("/login")
