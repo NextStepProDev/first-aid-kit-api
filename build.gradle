@@ -48,11 +48,11 @@ dependencies {
 
     implementation "com.github.ben-manes.caffeine:caffeine:${caffeineVersion}"
 
-    // Rate limiting
-    implementation "com.github.vladimir-bukhtoyarov:bucket4j-core:${bucket4jVersion}"
+    // Rate limiting (bucket4j 8.x moved to the com.bucket4j groupId; jdk17 variant)
+    implementation "com.bucket4j:bucket4j_jdk17-core:${bucket4jVersion}"
 
-    // Resilience4j for circuit breaker and retry
-    implementation "io.github.resilience4j:resilience4j-spring-boot3:${resilience4jVersion}"
+    // Resilience4j for circuit breaker and retry (spring-boot4 starter for Spring Boot 4)
+    implementation "io.github.resilience4j:resilience4j-spring-boot4:${resilience4jVersion}"
     implementation "io.github.resilience4j:resilience4j-retry:${resilience4jVersion}"
 
     implementation "org.springdoc:springdoc-openapi-starter-webmvc-ui:${openapiVersion}"

@@ -10,7 +10,7 @@
 
 
 ![Java](https://img.shields.io/badge/Java-25-blue)
-![Spring Boot](https://img.shields.io/badge/Spring%20Boot-4.0.1-green)
+![Spring Boot](https://img.shields.io/badge/Spring%20Boot-4.1.0-green)
 ![JSpecify](https://img.shields.io/badge/Null--Safety-JSpecify-orange)
 ![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)
 
@@ -292,7 +292,7 @@ Swagger UI: [http://localhost:8081/swagger-ui/index.html](http://localhost:8081/
 ## Technologies Used
 
 - Java 25
-- Spring Boot 4.0.1
+- Spring Boot 4.1.0
 - Spring Web / Validation / Security / Data JPA
 - Spring Cache with Caffeine
 - JWT (JSON Web Tokens) for authentication
