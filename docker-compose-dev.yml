@@ -2,7 +2,7 @@ version: '3.8'
 
 services:
   postgres-dev:
-    image: postgres:17.4
+    image: postgres:18.6
     container_name: postgres-dev
     environment:
       POSTGRES_DB: first_aid_kit_dev
@@ -11,8 +11,8 @@ services:
     ports:
       - "5433:5432"  # port hosta 5433 -> kontenerowy 5432
     volumes:
-      - postgres-dev-data:/var/lib/postgresql/data
+      - postgres18-dev-data:/var/lib/postgresql
     restart: unless-stopped
 
 volumes:
-  postgres-dev-data:
+  postgres18-dev-data:
