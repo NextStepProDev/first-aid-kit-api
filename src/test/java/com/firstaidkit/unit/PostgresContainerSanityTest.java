@@ -11,7 +11,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 public class PostgresContainerSanityTest {
 
     @Container
-    static PostgreSQLContainer postgres = new PostgreSQLContainer("postgres:17.4")
+    static PostgreSQLContainer postgres = new PostgreSQLContainer("postgres:18.6")
             .withDatabaseName("testdb")
             .withUsername("test")
             .withPassword("test");
