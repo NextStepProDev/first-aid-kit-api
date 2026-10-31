@@ -15,7 +15,31 @@ env:
   IMAGE_NAME: ${{ github.repository_owner }}/first-aid-kit-api
 
 jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    permissions:
+      contents: read
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v7
+
+      - name: Set up JDK 25
+        uses: actions/setup-java@v6
+        with:
+          distribution: temurin
+          java-version: '25'
+
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v6
+
+      # Testcontainers korzysta z Dockera dostepnego na runnerze ubuntu
+      - name: Run tests and coverage check
+        run: ./gradlew test jacocoTestReport jacocoTestCoverageVerification
+
   build:
+    needs: test
     runs-on: ubuntu-latest
     timeout-minutes: 30
     permissions:
